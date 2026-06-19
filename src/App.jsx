@@ -3,6 +3,7 @@ import { packMod } from "./generator/packMod";
 import { checkImage } from "./validators/imageSize";
 import { LOCATIONS } from "./data/locations";
 import ItemPicker from "./components/ItemPicker";
+import { SpriteGridGuide, PortraitGuide } from "./components/SpriteGuide";
 
 const SEASONS = [
   { v: "spring", label: "春", dot: "#7FB069" },
@@ -156,9 +157,16 @@ export default function App() {
 
           <section className="card">
             <h2 className="section-head"><span className="num">03</span> 图像</h2>
+            <p className="mini">只需 <b>2 张图</b>：一张行走图、一张立绘。「上下左右」都画在同一张图里，下面格子说明每张图内部怎么排。</p>
             <div className="grid2">
-              <Upload label="行走精灵图" spec="每帧 16 × 32" check={spriteCheck} onPick={setSprite} />
-              <Upload label="对话立绘" spec="每张 64 × 64" check={portraitCheck} onPick={setPortrait} />
+              <div className="img-col">
+                <Upload label="① 行走精灵图（1 张）" spec="建议 64 × 128" check={spriteCheck} onPick={setSprite} />
+                <SpriteGridGuide />
+              </div>
+              <div className="img-col">
+                <Upload label="② 对话立绘（1 张）" spec="最小 64 × 64" check={portraitCheck} onPick={setPortrait} />
+                <PortraitGuide />
+              </div>
             </div>
           </section>
 

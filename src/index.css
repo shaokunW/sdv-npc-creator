@@ -329,3 +329,48 @@ textarea { resize: vertical; }
   border-radius: 5px;
 }
 .r-tag-cat { color: var(--accent); background: #f6efdc; }
+
+/* image section guides */
+.img-col { display: flex; flex-direction: column; gap: 12px; }
+.guide { margin-top: 2px; }
+.guide-cap { font-size: 11px; color: var(--ink-soft); margin: 0 0 8px; line-height: 1.5; }
+.guide-cap b { color: var(--ink); }
+
+.sprite-grid { display: flex; flex-direction: column; gap: 3px; }
+.sprite-row { display: flex; align-items: center; gap: 3px; }
+.row-label {
+  width: 34px;
+  font-size: 11px;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+.cell {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  background: #f3f6ec;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.portrait-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  max-width: 200px;
+}
+.pcell {
+  font-size: 12px;
+  padding: 7px 8px;
+  background: #f3f6ec;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink-soft);
+}
+.pcell b { font-family: ui-monospace, monospace; color: var(--accent); margin-right: 3px; }
+.pcell-key { background: #eef6e8; border-color: var(--primary); color: var(--ink); }
