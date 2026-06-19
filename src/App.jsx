@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { packMod } from "./generator/packMod";
 import { checkImage } from "./validators/imageSize";
+import { LOCATIONS } from "./data/locations";
+import ItemPicker from "./components/ItemPicker";
 
 const SEASONS = [
   { v: "spring", label: "春", dot: "#7FB069" },
@@ -10,24 +12,11 @@ const SEASONS = [
 ];
 
 const INITIAL = {
-  author: "",
-  name: "",
-  birthSeason: "spring",
-  birthDay: 15,
-  gender: "Female",
-  age: "Adult",
-  manner: "Neutral",
-  socialAnxiety: "Outgoing",
-  optimism: "Positive",
-  homeLocation: "Town",
-  homeX: 30,
-  homeY: 60,
-  introduction: "",
-  dialogueMon: "",
-  giftLove: "",
-  giftLike: "",
-  giftDislike: "",
-  giftHate: "",
+  author: "", name: "", birthSeason: "spring", birthDay: 15,
+  gender: "Female", age: "Adult", manner: "Neutral", socialAnxiety: "Outgoing",
+  optimism: "Positive", homeLocation: "Town", homeX: 30, homeY: 60,
+  introduction: "", dialogueMon: "",
+  giftLove: "", giftLike: "", giftDislike: "", giftHate: "",
 };
 
 function Field({ label, hint, children }) {
@@ -47,19 +36,21 @@ export default function App() {
   const [spriteCheck, setSpriteCheck] = useState({ state: "empty", msg: "尚未选择图片" });
   const [portraitCheck, setPortraitCheck] = useState({ state: "empty", msg: "尚未选择图片" });
   const [busy, setBusy] = useState(false);
+  const [showCoords, setShowCoords] = useState(false);
 
   const set = (k) => (e) => setNpc((p) => ({ ...p, [k]: e.target.value }));
+  const setGift = (k) => (v) => setNpc((p) => ({ ...p, [k]: v }));
 
-  useEffect(() => {
-    checkImage(sprite, 16, 32).then(setSpriteCheck);
-  }, [sprite]);
-  useEffect(() => {
-    checkImage(portrait, 64, 64).then(setPortraitCheck);
-  }, [portrait]);
+  const onLocation = (e) => {
+    const loc = LOCATIONS.find((l) => l.id === e.target.value);
+    setNpc((p) => ({ ...p, homeLocation: loc.id, homeX: loc.tile.x, homeY: loc.tile.y }));
+  };
+
+  useEffect(() => { checkImage(sprite, 16, 32).then(setSpriteCheck); }, [sprite]);
+  useEffect(() => { checkImage(portrait, 64, 64).then(setPortraitCheck); }, [portrait]);
 
   const portraitURL = useMemo(
-    () => (portrait ? URL.createObjectURL(portrait) : null),
-    [portrait]
+    () => (portrait ? URL.createObjectURL(portrait) : null), [portrait]
   );
   useEffect(() => () => portraitURL && URL.revokeObjectURL(portraitURL), [portraitURL]);
 
@@ -68,11 +59,8 @@ export default function App() {
 
   async function onGenerate() {
     setBusy(true);
-    try {
-      await packMod(npc, sprite, portrait);
-    } finally {
-      setBusy(false);
-    }
+    try { await packMod(npc, sprite, portrait); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -80,9 +68,7 @@ export default function App() {
       <header className="masthead">
         <p className="eyebrow">Stardew Valley · Content Patcher</p>
         <h1>新村民生成器</h1>
-        <p className="sub">
-          填好资料、放上图，导出一个能直接丢进 <code>Mods/</code> 的村民。
-        </p>
+        <p className="sub">填好资料、放上图，导出一个能直接丢进 <code>Mods/</code> 的村民。</p>
       </header>
 
       <main className="layout">
@@ -100,9 +86,7 @@ export default function App() {
             <div className="grid3">
               <Field label="生日 · 季节">
                 <select value={npc.birthSeason} onChange={set("birthSeason")}>
-                  {SEASONS.map((s) => (
-                    <option key={s.v} value={s.v}>{s.label}</option>
-                  ))}
+                  {SEASONS.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
                 </select>
               </Field>
               <Field label="生日 · 日期">
@@ -119,7 +103,7 @@ export default function App() {
           </section>
 
           <section className="card">
-            <h2 className="section-head"><span className="num">02</span> 性格</h2>
+            <h2 className="section-head"><span className="num">02</span> 性格与居所</h2>
             <div className="grid2">
               <Field label="年龄段">
                 <select value={npc.age} onChange={set("age")}>
@@ -150,51 +134,52 @@ export default function App() {
                 </select>
               </Field>
             </div>
-            <div className="grid3">
-              <Field label="所在地图" hint="如 Town">
-                <input value={npc.homeLocation} onChange={set("homeLocation")} />
-              </Field>
-              <Field label="出生格 X">
-                <input type="number" value={npc.homeX} onChange={set("homeX")} />
-              </Field>
-              <Field label="出生格 Y">
-                <input type="number" value={npc.homeY} onChange={set("homeY")} />
+            <div style={{ marginTop: 14 }}>
+              <Field label="居住地图" hint="村民出生与睡觉的地方">
+                <select value={npc.homeLocation} onChange={onLocation}>
+                  {LOCATIONS.map((l) => (
+                    <option key={l.id} value={l.id}>{l.zh}（{l.en}）</option>
+                  ))}
+                </select>
               </Field>
             </div>
+            <button type="button" className="advanced-toggle" onClick={() => setShowCoords((s) => !s)}>
+              {showCoords ? "▾" : "▸"} 高级：手动微调落脚坐标（可不管）
+            </button>
+            {showCoords && (
+              <div className="grid2" style={{ marginTop: 10 }}>
+                <Field label="格子 X"><input type="number" value={npc.homeX} onChange={set("homeX")} /></Field>
+                <Field label="格子 Y"><input type="number" value={npc.homeY} onChange={set("homeY")} /></Field>
+              </div>
+            )}
           </section>
 
           <section className="card">
             <h2 className="section-head"><span className="num">03</span> 图像</h2>
             <div className="grid2">
-              <Upload
-                label="行走精灵图"
-                spec="每帧 16 × 32"
-                check={spriteCheck}
-                onPick={(f) => setSprite(f)}
-              />
-              <Upload
-                label="对话立绘"
-                spec="每张 64 × 64"
-                check={portraitCheck}
-                onPick={(f) => setPortrait(f)}
-              />
+              <Upload label="行走精灵图" spec="每帧 16 × 32" check={spriteCheck} onPick={setSprite} />
+              <Upload label="对话立绘" spec="每张 64 × 64" check={portraitCheck} onPick={setPortrait} />
             </div>
           </section>
 
           <section className="card">
-            <h2 className="section-head"><span className="num">04</span> 对话与礼物</h2>
+            <h2 className="section-head"><span className="num">04</span> 对话</h2>
             <Field label="初次见面台词" hint="留空则自动生成一句">
               <textarea rows="2" value={npc.introduction} onChange={set("introduction")} placeholder="你好，我是…" />
             </Field>
             <Field label="周一台词" hint="可加 $h 显示开心表情">
               <textarea rows="2" value={npc.dialogueMon} onChange={set("dialogueMon")} placeholder="周一过得真慢呢。$h" />
             </Field>
-            <p className="mini">礼物用物品 ID，空格分隔；负数是分类（-5 蛋、-6 奶、-7 熟食）。</p>
-            <div className="grid2">
-              <Field label="喜爱"><input value={npc.giftLove} onChange={set("giftLove")} placeholder="746 344" /></Field>
-              <Field label="喜欢"><input value={npc.giftLike} onChange={set("giftLike")} placeholder="-5 -6" /></Field>
-              <Field label="不喜欢"><input value={npc.giftDislike} onChange={set("giftDislike")} placeholder="-2" /></Field>
-              <Field label="讨厌"><input value={npc.giftHate} onChange={set("giftHate")} placeholder="-7" /></Field>
+          </section>
+
+          <section className="card">
+            <h2 className="section-head"><span className="num">05</span> 礼物口味</h2>
+            <p className="mini">搜中文、英文或 ID 都行。选「分类」可一次涵盖整类（如「所有水果」）。</p>
+            <div className="pickers">
+              <ItemPicker label="喜爱" value={npc.giftLove} onChange={setGift("giftLove")} />
+              <ItemPicker label="喜欢" value={npc.giftLike} onChange={setGift("giftLike")} />
+              <ItemPicker label="不喜欢" value={npc.giftDislike} onChange={setGift("giftDislike")} />
+              <ItemPicker label="讨厌" value={npc.giftHate} onChange={setGift("giftHate")} />
             </div>
           </section>
         </div>
@@ -203,11 +188,9 @@ export default function App() {
           <div className="villager-card">
             <p className="eyebrow">预览</p>
             <div className="frame">
-              {portraitURL ? (
-                <span className="px" style={{ backgroundImage: `url(${portraitURL})` }} />
-              ) : (
-                <span className="placeholder">?</span>
-              )}
+              {portraitURL
+                ? <span className="px" style={{ backgroundImage: `url(${portraitURL})` }} />
+                : <span className="placeholder">?</span>}
             </div>
             <h3 className="vname">{npc.name.trim() || "无名村民"}</h3>
             <p className="vmeta">
@@ -220,9 +203,7 @@ export default function App() {
             {!ready && (
               <p className="need">还需要：{!npc.name.trim() ? "名字 " : ""}{!sprite ? "精灵图 " : ""}{!portrait ? "立绘" : ""}</p>
             )}
-            <p className="howto">
-              下载后解压到 <code>Stardew Valley/Mods/</code>，需已装 SMAPI 与 Content Patcher。
-            </p>
+            <p className="howto">下载后解压到 <code>Stardew Valley/Mods/</code>，需已装 SMAPI 与 Content Patcher。</p>
           </div>
         </aside>
       </main>
@@ -235,11 +216,7 @@ function Upload({ label, spec, check, onPick }) {
     <div className="upload">
       <span className="field-label">{label}</span>
       <label className="dropzone">
-        <input
-          type="file"
-          accept="image/png"
-          onChange={(e) => onPick(e.target.files?.[0] || null)}
-        />
+        <input type="file" accept="image/png" onChange={(e) => onPick(e.target.files?.[0] || null)} />
         <span className="dz-spec">{spec}</span>
         <span className="dz-cta">选择 PNG</span>
       </label>
